@@ -77,11 +77,13 @@ public class ServerSide {
                 String path = getPath(request);
                 System.out.println(request);
                 System.out.println("Path is " + path);
+                System.out.println();
 
                 String messageBrowse = "<h1> Hello world </h1>";
                 int length = messageBrowse.getBytes().length;
                 String response = "HTTP/1.1 200 OK\r\nContent-Length: " + length + "\r\nContent-Type: text/html\r\n\r\n" + messageBrowse;
                 dataOut.writeUTF(response);
+                System.out.println(response);
 
                 dataOut.flush();
                 dataOut.close();
