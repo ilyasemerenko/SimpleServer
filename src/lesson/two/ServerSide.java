@@ -50,14 +50,7 @@ public class ServerSide {
     private void startServer() {
 
         ServerSocket serverSocket = null;
-        int port = 55555;
-        try {
-            serverSocket = new ServerSocket(port);
-            System.out.println("Waiting for a client...");
-        } catch (IOException e) {
-            System.err.println("Could not listen on port: 55555.");
-            System.exit(1);
-        }
+        serverSocket = startAndWait(serverSocket,55555);
 
         //while (true) {
         Socket clientSocket = null;
@@ -94,6 +87,17 @@ public class ServerSide {
                 e.printStackTrace();
             }
         //}
+    }
+
+    private ServerSocket startAndWait(ServerSocket serverSocket, int port) {
+        try {
+            serverSocket = new ServerSocket(port);
+            System.out.println("Waiting for a client...");
+        } catch (IOException e) {
+            System.err.println("Could not listen on port: 55555.");
+            System.exit(1);
+        }
+        return serverSocket;
     }
 
     private String getPath(String request) {

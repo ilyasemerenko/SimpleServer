@@ -1,0 +1,1 @@
+You're reading readme.txt file from content folder.
