@@ -44,49 +44,47 @@ public class ServerSide {
 public class ServerSide {
     public static void main(String[] args) throws IOException {
         ServerSide server = new ServerSide();
-        server.startServer();
+        try {
+            server.startServer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private void startServer() {
+    private void startServer() throws Exception{
 
         ServerSocket serverSocket = null;
         serverSocket = startAndWait(serverSocket,55555);
-
-        //while (true) {
+        FileSupport fileSupport = null;
         Socket clientSocket = null;
-            try {
-                clientSocket = serverSocket.accept();
+        while (true) {
+            clientSocket = serverSocket.accept();
 
-                if (clientSocket != null)
-                    System.out.println("Connected client-server");
+            if (clientSocket != null)
+                System.out.println("Connected client-server");
 
-
-                InputStream sin = clientSocket.getInputStream();
-                OutputStream sout = clientSocket.getOutputStream();
-                DataInputStream dataIn = new DataInputStream(sin);
-                DataOutputStream dataOut = new DataOutputStream(sout);
-
-                String request = dataIn.readLine();
-                String path = getPath(request);
-                System.out.println(request);
-                System.out.println("Path is " + path);
-                System.out.println();
-
-                String messageBrowse = "<h1> Hello world </h1>";
-                int length = messageBrowse.getBytes().length;
-                String response = "HTTP/1.1 200 OK\r\nContent-Length: " + length + "\r\nContent-Type: text/html\r\n\r\n" + messageBrowse;
-                dataOut.writeUTF(response);
-                System.out.println(response);
-
-                dataOut.flush();
-                dataOut.close();
-                clientSocket.close();
-                serverSocket.close();
-
-            } catch (IOException e) {
-                e.printStackTrace();
+            InputStream sin = null;
+            if (clientSocket != null) {
+                sin = clientSocket.getInputStream();
             }
-        //}
+            OutputStream sout = clientSocket.getOutputStream();
+            DataInputStream dataIn = new DataInputStream(sin);
+
+            String request = dataIn.readLine();
+            String path = getPath(request).trim();
+            System.out.println(request);
+            System.out.println("Path is " + path);
+            System.out.println();
+
+            fileSupport = new FileSupport();
+            byte[] elements = fileSupport.getFile(path);
+
+            /*String messageToSend = new String(elements);
+            int length = messageToSend.getBytes().length;
+            String response = "HTTP/1.1 200 OK\r\nContent-Length: " + length + "\r\nContent-Type: text/html\r\n\r\n" + messageToSend;*/
+
+            sout.write(elements,0,elements.length);
+        }
     }
 
     private ServerSocket startAndWait(ServerSocket serverSocket, int port) {

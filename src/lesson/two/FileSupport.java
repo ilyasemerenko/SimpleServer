@@ -38,14 +38,9 @@ public class FileSupport {
                 inputStream[i] = (byte)content;
                 i++;
             }
-            for(byte element : inputStream){
-                System.out.print((char)element);
-            }
             fileInStream.close();
             System.out.println();
 
-        } catch (FileNotFoundException e){
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
