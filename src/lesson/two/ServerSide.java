@@ -56,8 +56,10 @@ public class ServerSide {
         ServerSocket serverSocket = null;
         serverSocket = startAndWait(serverSocket,55555);
         FileSupport fileSupport = null;
+        SimpleCalculator calculator = null;
+
         Socket clientSocket = null;
-        while (true) {
+        //while (true) {
             clientSocket = serverSocket.accept();
 
             if (clientSocket != null)
@@ -69,6 +71,7 @@ public class ServerSide {
             }
             OutputStream sout = clientSocket.getOutputStream();
             DataInputStream dataIn = new DataInputStream(sin);
+            PrintWriter writer = new PrintWriter(sout);
 
             String request = dataIn.readLine();
             String path = getPath(request).trim();
@@ -76,15 +79,20 @@ public class ServerSide {
             System.out.println("Path is " + path);
             System.out.println();
 
-            fileSupport = new FileSupport();
-            byte[] elements = fileSupport.getFile(path);
-
-            /*String messageToSend = new String(elements);
-            int length = messageToSend.getBytes().length;
-            String response = "HTTP/1.1 200 OK\r\nContent-Length: " + length + "\r\nContent-Type: text/html\r\n\r\n" + messageToSend;*/
-
-            sout.write(elements,0,elements.length);
-        }
+            if(path.contains("calculate")){
+                calculator = new SimpleCalculator();
+                String result = String.valueOf(calculator.operate(path));
+                System.out.println("result = " + result);
+                byte[] elements = result.getBytes();
+                sout.write(elements,0,elements.length);
+            } else {
+                fileSupport = new FileSupport();
+                byte[] elements = fileSupport.getFile(path);
+                sout.write(elements,0,elements.length);
+            }
+            sout.flush();
+        //}
+        //serverSocket.close();
     }
 
     private ServerSocket startAndWait(ServerSocket serverSocket, int port) {
