@@ -6,111 +6,54 @@ import java.net.Socket;
 
 /**
  * Created by SemerenkoIlya on 02.03.2016.
- *//*
+ */
 
 public class ServerSide {
-    public static void main(String[] ar)    {
-        int port = 54321; // случайный порт (может быть любое число от 1025 до 65535)
-        try {
-            ServerSocket ss = new ServerSocket(port); // создаем сокет сервера и привязываем его к вышеуказанному порту
-            System.out.println("Waiting for a client...");
-            while(true) {
-            Socket socket = ss.accept(); // заставляем сервер ждать подключений и выводим сообщение когда кто-то связался с сервером
-            System.out.println("Got a client :) ... Finally, someone saw me through all the cover!");
-            System.out.println();
+    private static final int PORT = 12345;
+    public static void main(String[] args) throws Exception {
+        new ServerSide().run();
+    }
 
-            // Берем входной и выходной потоки сокета, теперь можем получать и отсылать данные клиенту.
-            InputStream sin = socket.getInputStream();
-            OutputStream sout = socket.getOutputStream();
+    private void run() {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            System.out.println("Waiting for a client on port: " + PORT);
 
-            // Конвертируем потоки в другой тип, чтоб легче обрабатывать текстовые сообщения.
-            DataInputStream in = new DataInputStream(sin);
-            DataOutputStream out = new DataOutputStream(sout);
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
 
-            String line = null;
+                if (clientSocket != null) {
+                    System.out.println("Connected client-server");
+                } else {
+                    System.out.println("No connection!");
+                    System.exit(0);
+                }
 
-                //line = in.readUTF(); // ожидаем пока клиент пришлет строку текста.
-                String messageBrowse = "Hello";
-                int length = messageBrowse.getBytes().length;
-                String lineOut = "HTTP/1.1 200 OK\r\nContent-Length: " + length +"\r\nContent-Type: text/html\r\n" + messageBrowse;
+                InputStream sin =clientSocket.getInputStream();
+                String request = new DataInputStream(sin).readLine();
+                String path = getPath(request).trim();
 
-                System.out.println("The dumb client just sent me this line : " + line);
-                System.out.println("I'm sending it back...");
-                out.writeUTF(lineOut); // отсылаем клиенту обратно ту самую строку текста.
-                out.flush(); // заставляем поток закончить передачу данных.
-                System.out.println("Waiting for the next line...");
-                System.out.println();
-          */
-public class ServerSide {
-    public static void main(String[] args) throws IOException {
-        ServerSide server = new ServerSide();
-        try {
-            server.startServer();
-        } catch (Exception e) {
+                if (path.contains("calculate")) {
+                    String result = String.valueOf(new SimpleCalculator().operate(path));
+                    System.out.println("result = " + result);
+                    byte[] elements = result.getBytes();
+                    clientSocket.getOutputStream().write(elements, 0, elements.length);
+                } else {
+                    byte[] elements = new FileSupport().getFile(path);
+                    clientSocket.getOutputStream().write(elements, 0, elements.length);
+                }
+                clientSocket.close();
+            }
+        } catch (IOException e){
             e.printStackTrace();
         }
     }
 
-    private void startServer() throws Exception{
-
-        ServerSocket serverSocket = null;
-        serverSocket = startAndWait(serverSocket,55555);
-        FileSupport fileSupport = null;
-        SimpleCalculator calculator = null;
-
-        Socket clientSocket = null;
-        //while (true) {
-            clientSocket = serverSocket.accept();
-
-            if (clientSocket != null)
-                System.out.println("Connected client-server");
-
-            InputStream sin = null;
-            if (clientSocket != null) {
-                sin = clientSocket.getInputStream();
-            }
-            OutputStream sout = clientSocket.getOutputStream();
-            DataInputStream dataIn = new DataInputStream(sin);
-            PrintWriter writer = new PrintWriter(sout);
-
-            String request = dataIn.readLine();
-            String path = getPath(request).trim();
-            System.out.println(request);
-            System.out.println("Path is " + path);
-            System.out.println();
-
-            if(path.contains("calculate")){
-                calculator = new SimpleCalculator();
-                String result = String.valueOf(calculator.operate(path));
-                System.out.println("result = " + result);
-                byte[] elements = result.getBytes();
-                sout.write(elements,0,elements.length);
-            } else {
-                fileSupport = new FileSupport();
-                byte[] elements = fileSupport.getFile(path);
-                sout.write(elements,0,elements.length);
-            }
-            sout.flush();
-        //}
-        //serverSocket.close();
-    }
-
-    private ServerSocket startAndWait(ServerSocket serverSocket, int port) {
-        try {
-            serverSocket = new ServerSocket(port);
-            System.out.println("Waiting for a client...");
-        } catch (IOException e) {
-            System.err.println("Could not listen on port: 55555.");
-            System.exit(1);
-        }
-        return serverSocket;
-    }
-
     private String getPath(String request) {
-        String path = null;
         int pathStart = request.indexOf(" ");
         int pathEnd = request.lastIndexOf(" ");
-        path = request.substring(pathStart,pathEnd);
+        String path = request.substring(pathStart,pathEnd);
+        System.out.println("Request is: " + request);
+        System.out.println("Path is: " + path);
         return path;
     }
 }

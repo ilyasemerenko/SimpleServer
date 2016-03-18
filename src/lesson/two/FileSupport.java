@@ -30,6 +30,7 @@ public class FileSupport {
         try {
             fileInStream = new FileInputStream(String.valueOf(filePath.get(path)));
 
+            System.out.println(String.valueOf(filePath.get(path)));
             int content;
             int i = 0;
             inputStream = new byte[fileInStream.available()];
